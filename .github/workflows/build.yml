@@ -10,21 +10,18 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout Code
+        uses: actions/checkout@v2
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
-      - uses: sonarsource/sonarqube-scan-action@master
+          fetch-depth: 0
+
+      - name: SonarQube Scan
+        uses: sonarsource/sonarqube-scan-action@master
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
-      # If you wish to fail your job when the Quality Gate is red, uncomment the
-      # following lines. This would typically be used to fail a deployment.
-      # - uses: sonarsource/sonarqube-quality-gate-action@master
-      #   timeout-minutes: 5
-      #   env:
-      #     SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      
-      - name: Install trivy
+
+      - name: Install Trivy
         run: |
           # Install trivy
           sudo apt-get install wget apt-transport-https gnupg lsb-release -y
@@ -34,12 +31,19 @@ jobs:
           sudo apt-get install trivy -y
           # Command to scan files
           trivy fs .
-      - name : Docker build and push
-        run:
-           #run commands to build and push docker images
-          docker build --build-arg TMDB_V3_API_KEY=<USE YOUR API KEY> -t netflix .
+
+      - name: Docker Build and Push
+        run: |
+          # Run commands to build and push Docker images
+          docker build --build-arg TMDB_V3_API_KEY=$TMDB_API_KEY -t netflix .
           docker tag netflix adithyasai143/netflix:latest
           docker login -u ${{ secrets.DOCKERHUB_USERNAME }} -p ${{ secrets.DOCKERHUB_TOKEN }}
-          docker push adithyasai143/netflix:latest  
-  env:
-    DOCKER_CLI_ACI: 1    
+          docker push adithyasai143/netflix:latest
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+
+  # Define additional jobs here if needed
+
+# Define environment variables here, if applicable
+env:
+  DOCKER_CLI_ACI: 1
