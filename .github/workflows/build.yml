@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  build-analyze-scan:
     name: Build
     runs-on: ubuntu-latest
     steps:
@@ -42,3 +42,14 @@ jobs:
         
         env:
           DOCKER_CLI_ACI: 1
+  
+  deploy:    
+    needs: build-analyze-scan  
+    runs-on: [bladerunner2049]  
+    steps:
+      - name: Pull the docker image
+        run: docker pull adithyasai143/netflix:latest
+      - name: Trivy image scan
+        run: trivy image adithyasai143/netflix:latest
+      - name: Run the container netflix
+        run: docker run -d --name netflix -p 8081:80 adithyasai143/netflix:latest
